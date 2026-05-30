@@ -56,12 +56,12 @@ export default function ScrollToTopButton() {
           whileTap={{ scale: 0.94 }}
           transition={{ duration: 0.25 }}
           className={cn(
-            "fixed bottom-6 md:bottom-18 right-4 md:right-6 z-500000 overflow-hidden",
+            "fixed bottom-20 md:bottom-18 right-4 md:right-6 z-99 overflow-hidden",
             "h-14 w-14 hover:cursor-pointer",
             "backdrop-blur-xl",
             "bg-white/80 dark:bg-black/60",
             "border border-white/30 dark:border-white/10",
-            "shadow-xl",
+            "shadow-2xs",
             "flex flex-col items-center justify-center",
             borderAnimeClass
           )}

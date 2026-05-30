@@ -27,7 +27,7 @@ import type {
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
-const CATEGORIES: { value: ProductCategory | "all"; label: string }[] = [
+export const CATEGORIES: { value: ProductCategory | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "electronics", label: "Electronics" },
   { value: "fashion", label: "Fashion" },
@@ -39,7 +39,7 @@ const CATEGORIES: { value: ProductCategory | "all"; label: string }[] = [
   { value: "automotive", label: "Automotive" },
 ];
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "featured", label: "Featured" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
@@ -47,7 +47,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "newest", label: "Newest" },
 ];
 
-const PRICE_RANGES = [
+export const PRICE_RANGES = [
   { label: "Under $25", min: 0, max: 25 },
   { label: "$25–$100", min: 25, max: 100 },
   { label: "$100–$300", min: 100, max: 300 },
@@ -56,7 +56,7 @@ const PRICE_RANGES = [
 
 // ─── Sort util ─────────────────────────────────────────────────────────────
 
-function sortProducts(products: Product[], sort: SortOption): Product[] {
+export function sortProducts(products: Product[], sort: SortOption): Product[] {
   switch (sort) {
     case "price-asc":
       return [...products].sort((a, b) => a.price - b.price);
@@ -77,7 +77,7 @@ function sortProducts(products: Product[], sort: SortOption): Product[] {
 
 // ─── ActiveFilter chip ──────────────────────────────────────────────────────
 
-const FilterChip = ({
+export const FilterChip = ({
   label,
   onRemove,
 }: {

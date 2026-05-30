@@ -22,7 +22,7 @@ import DiscountBadge from "./DiscountBadge";
 
 // ─── Badge config ──────────────────────────────────────────────────────────
 
-const BADGE_CONFIG: Record<
+export const BADGE_CONFIG: Record<
   NonNullable<Product["badge"]>,
   { label: string; className: string }
 > = {
@@ -36,7 +36,7 @@ const BADGE_CONFIG: Record<
   },
   sale: {
     label: "Sale",
-    className: "bg-red-100 text-red-700 border-red-200",
+    className: "bg-rose-100 text-rose-700 border-rose-200",
   },
   limited: {
     label: "Limited",
@@ -350,14 +350,14 @@ const ProductCard = ({
         {/* Overlaid badges */}
         <div className="absolute left-3 top-3 flex flex-col gap-1">
           {badge && (
-            <span
+            <Badge
               className={cn(
                 "border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest",
                 badge.className,
               )}
             >
               {badge.label}
-            </span>
+            </Badge>
           )}
           {product.discountPercent && (
             <DiscountBadge percent={product.discountPercent} />
@@ -367,14 +367,14 @@ const ProductCard = ({
         {/* Wishlist */}
         <button
           onClick={handleWishlist}
-          className="absolute right-3 top-3 flex size-8 items-center justify-center border border-border bg-background/90 text-neutral-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover:opacity-100 hover:scale-110 hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+          className="absolute right-3 top-3 flex size-8 items-center justify-center border border-border bg-background/90 text-neutral-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover:opacity-100 hover:scale-110 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
         >
           <HeartIcon
             size={16}
             weight={wishlisted ? "fill" : "regular"}
             className={cn(
               "transition-colors",
-              wishlisted ? "text-red-500" : "",
+              wishlisted ? "text-rose-500" : "",
             )}
           />
         </button>
@@ -443,7 +443,7 @@ const ProductCard = ({
 
         {/* Stock */}
         {!product.inStock && (
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-rose-600">
             Out of stock
           </p>
         )}

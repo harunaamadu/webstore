@@ -3,44 +3,44 @@
 import * as React from "react";
 
 import { useHideOnScroll, useScrolled } from "@/hooks";
-
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Announcement } from "../announcement";
-import { Logo, Navigation } from "../common";
-import HeaderAction from "../common/headerAction";
-
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
+
+import { Announcement } from "../announcement";
+import { Logo, Navigation } from "../common";
+import HeaderAction from "../common/headerAction";
 import {
   MegaMenuPanel,
   MegaMenuProvider,
   MegaMenuTrigger,
 } from "../common/mega-menu";
 import BottomNav from "../common/bottomNav";
+import SearchPanel from "../search/SearchPanel";
+import { useSearchStore } from "@/store/search.store";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Header = () => {
   const navRef = React.useRef<HTMLElement>(null);
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [searchOpen, setSearchOpen] = React.useState(false);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const scrolled = useScrolled();
   useHideOnScroll(navRef, 120);
 
+  // Search state lives in the store — any component can open/close it
+  const { isOpen, closeSearch } = useSearchStore();
+
   return (
     <>
       <Announcement />
+
+      <SearchPanel open={isOpen} onClose={closeSearch} />
 
       <MegaMenuProvider>
         <header
           ref={navRef}
           className="sticky top-0 left-0 right-0 z-40 will-change-transform"
         >
-          {/* panel renders the dropdown + mobile drawer */}
           <MegaMenuPanel />
 
           <div
@@ -66,7 +66,9 @@ const Header = () => {
           </div>
         </header>
 
-        <div className="lg:hidden"><MegaMenuPanel /></div>
+        <div className="lg:hidden">
+          <MegaMenuPanel />
+        </div>
 
         <BottomNav />
       </MegaMenuProvider>

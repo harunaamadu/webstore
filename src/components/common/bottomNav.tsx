@@ -1,5 +1,3 @@
-// components/layout/BottomNav.tsx
-
 "use client";
 
 import React from "react";
@@ -14,35 +12,19 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useHideOnScrollMobile, useScrolled } from "@/hooks";
+import { useSearchStore } from "@/store/search.store";
 
 // Shared props for every bottom nav button
 const navButtonProps = {
   variant: "ghost",
   size: "icon-lg",
-  className:
-    "flex-col gap-1 px-4 font-medium text-[10px]",
+  className: "flex-col gap-1 px-4 font-medium text-[10px]",
 } as const;
 
-const NAV_ITEMS = [
-  {
-    icon: <MagnifyingGlassIcon size={20} />,
-    label: "Search",
-  },
-  {
-    icon: <BellIcon size={20} />,
-    label: "Alert",
-  },
-  {
-    icon: <ListIcon size={20} />,
-    label: "Menu",
-  },
-];
-
 const BottomNav = () => {
-  const navRef =
-    React.useRef<HTMLElement>(null);
-
+  const navRef   = React.useRef<HTMLElement>(null);
   const scrolled = useScrolled(20);
+  const { openSearch } = useSearchStore();
 
   useHideOnScrollMobile(navRef, 120);
 
@@ -66,33 +48,27 @@ const BottomNav = () => {
     >
       <MegaMenuTrigger />
 
-      {NAV_ITEMS.slice(0, 1).map(
-        ({ icon, label }) => (
-          <Button
-            key={label}
-            {...navButtonProps}
-          >
-            {icon}
-
-            <span>{label}</span>
-          </Button>
-        )
-      )}
+      {/* Search — opens the global search panel via the store */}
+      <Button
+        {...navButtonProps}
+        onClick={openSearch}
+        aria-label="Open search"
+      >
+        <MagnifyingGlassIcon size={20} />
+        <span>Search</span>
+      </Button>
 
       <AuthButton anchor="bottom-center" />
 
-      {NAV_ITEMS.slice(1, 3).map(
-        ({ icon, label }) => (
-          <Button
-            key={label}
-            {...navButtonProps}
-          >
-            {icon}
+      <Button {...navButtonProps} aria-label="Alerts">
+        <BellIcon size={20} />
+        <span>Alert</span>
+      </Button>
 
-            <span>{label}</span>
-          </Button>
-        )
-      )}
+      <Button {...navButtonProps} aria-label="Menu">
+        <ListIcon size={20} />
+        <span>Menu</span>
+      </Button>
     </nav>
   );
 };

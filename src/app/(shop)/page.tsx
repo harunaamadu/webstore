@@ -1,8 +1,10 @@
+import Bestsellers from "@/components/home/Bestsellers";
 import Category from "@/components/home/Category";
 import Hero from "@/components/home/Hero";
 import LargePromoCard from "@/components/home/LargePromoCard";
 import Personalized from "@/components/home/Personalized";
 import PromoCard from "@/components/home/PromoCard";
+import RecentlyViewed from "@/components/home/RecentlyViewed";
 import Image from "next/image";
 
 export default function Home() {
@@ -13,6 +15,8 @@ export default function Home() {
       <Category />
       <PromoCard />
       <LargePromoCard />
+      <RecentlyViewed />
+      <Bestsellers />
     </main>
   );
 }

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+export * from "./product"
+
 export type AnnouncementOption = {
   label: string
   icon: ReactNode

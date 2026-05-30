@@ -25,7 +25,8 @@ const LargePromoCard = () => {
       <Reveal variant="blur">
         <div
           className={cn(
-            "relative overflow-hidden border bg-background",
+            "relative overflow-hidden border border-border/50 bg-background w-full h-full -z-1",
+            "before:[animation-delay:13s] hover:paused!",
             borderAnimeClass
           )}
         >

@@ -7,6 +7,7 @@ import {
   ClockCounterClockwiseIcon,
   TrophyIcon,
   ShoppingBagIcon,
+  SparkleIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 
@@ -39,7 +40,7 @@ interface ProductsSkeletonProps {
 
 export const ProductsSkeleton = ({
   count = 4,
-  className = "grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
+  className = "grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
 }: ProductsSkeletonProps) => (
   <div className={className}>
     {Array.from({ length: count }).map((_, i) => (
@@ -54,6 +55,8 @@ export const EMPTY_STATE_ICONS = {
   history: ClockCounterClockwiseIcon,
   bestsellers: TrophyIcon,
   default: ShoppingBagIcon,
+  SparkleIcon,
+  recommendations: SparkleIcon,
 } satisfies Record<string, Icon>;
 
 export type EmptyStatePreset = keyof typeof EMPTY_STATE_ICONS;

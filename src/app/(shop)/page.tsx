@@ -1,3 +1,4 @@
+import AdProducts from "@/components/home/AdProducts";
 import Bestsellers from "@/components/home/Bestsellers";
 import Category from "@/components/home/Category";
 import CollectionSpotlight from "@/components/home/CollectionSpotlight";
@@ -6,11 +7,12 @@ import LargePromoCard from "@/components/home/LargePromoCard";
 import Personalized from "@/components/home/Personalized";
 import PromoCard from "@/components/home/PromoCard";
 import RecentlyViewed from "@/components/home/RecentlyViewed";
-import Image from "next/image";
+import Recommendations from "@/components/home/Recommendations";
+import Subscription from "@/components/home/Subscription";
 
 export default function Home() {
   return (
-    <main className="flex w-full max-h-screen flex-col gap-4">
+    <main className="flex w-full flex-col gap-4">
       <Hero />
       <Personalized />
       <Category />
@@ -19,6 +21,9 @@ export default function Home() {
       <RecentlyViewed />
       <Bestsellers />
       <CollectionSpotlight />
+      <Recommendations />
+      <AdProducts />
+      <Subscription />
     </main>
   );
 }

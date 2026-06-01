@@ -7,15 +7,14 @@ import { mockProducts } from "@/data";
 
 const RecentlyViewed = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    // Simulate fetching recently viewed from storage / API
     const timer = setTimeout(() => {
+      // Replace with real recently-viewed store/API
       setProducts(mockProducts.slice(-4));
       setLoading(false);
     }, 1200);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -28,8 +27,8 @@ const RecentlyViewed = () => {
       skeletonCount={4}
       link={{ href: "/shop/history", label: "View All" }}
       emptyIcon="history"
-      emptyTitle="Nothing viewed yet"
-      mobileCardBasis="basis-[72vw]"
+      emptyTitle="No recently viewed items"
+      emptyDescription="Products you've browsed will appear here."
     />
   );
 };

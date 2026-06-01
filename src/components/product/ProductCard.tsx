@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import type { Product } from "@/types";
 import DiscountBadge from "./DiscountBadge";
 
+import { useCartStore } from "@/store/cart.store";
+
 // ─── Badge config ──────────────────────────────────────────────────────────
 
 export const BADGE_CONFIG: Record<
@@ -95,7 +97,8 @@ const StarRating = ({
 
 export interface ProductCardProps {
   product: Product;
-  variant?: "default" | "compact" | "horizontal";
+  variant?: "default" | "compact" | "horizontal" | "mini";
+  active?: boolean;
   onAddToCart?: (product: Product) => void;
   onWishlist?: (product: Product) => void;
   className?: string;
@@ -104,6 +107,7 @@ export interface ProductCardProps {
 const ProductCard = ({
   product,
   variant = "default",
+  active = false,
   onAddToCart,
   onWishlist,
   className,
@@ -113,12 +117,24 @@ const ProductCard = ({
 
   const badge = product.badge ? BADGE_CONFIG[product.badge] : null;
 
+  const addItem = useCartStore((s) => s.addItem);
+
+  const cartItem = useCartStore((s) =>
+    s.items.find((item) => item.product.id === product.id),
+  );
+
+  const quantityInCart = cartItem?.quantity ?? 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    addItem(product);
+
     setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 1500);
+
     onAddToCart?.(product);
-    setTimeout(() => setAddedToCart(false), 1800);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -220,11 +236,13 @@ const ProductCard = ({
             disabled={!product.inStock}
           >
             <ShoppingCartIcon size={13} />
-            {addedToCart
-              ? "Added!"
-              : product.inStock
-                ? "Add to Cart"
-                : "Out of Stock"}
+            {quantityInCart > 0
+              ? `${quantityInCart} in Cart`
+              : addedToCart
+                ? "Added!"
+                : product.inStock
+                  ? "Add to Cart"
+                  : "Out of Stock"}
           </Button>
         </div>
       </motion.div>
@@ -306,12 +324,59 @@ const ProductCard = ({
           )}
         >
           <ShoppingCartIcon size={12} />
-          {addedToCart
-            ? "Added!"
-            : product.inStock
-              ? "Add to Cart"
-              : "Out of Stock"}
+          {quantityInCart > 0
+            ? `${quantityInCart} in Cart`
+            : addedToCart
+              ? "Added!"
+              : product.inStock
+                ? "Add to Cart"
+                : "Out of Stock"}
         </button>
+      </motion.div>
+    );
+  }
+
+  // ── Ad strip variant ──────────────────────────────────────────────────
+  if (variant === "mini") {
+    return (
+      <motion.div
+        whileHover={{ backgroundColor: "var(--muted)" }}
+        transition={{ duration: 0.15 }}
+        className={cn(
+          "group relative flex h-16 cursor-pointer items-center gap-3 px-3 transition-colors",
+          className,
+        )}
+      >
+        {/* Product image */}
+        <div className="relative size-12 shrink-0 overflow-hidden bg-muted">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="48px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-1 text-xs font-semibold text-foreground">
+            {product.name.split(" ").slice(0, 3).join(" ")}
+          </p>
+          {product.discountPercent && (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Big Sale {product.discountPercent}%
+            </p>
+          )}
+        </div>
+
+        {/* Active underline indicator */}
+        {active && (
+          <motion.div
+            layoutId="ad-active-indicator"
+            className="absolute bottom-0 left-0 h-0.5 w-full bg-primary"
+          />
+        )}
       </motion.div>
     );
   }
@@ -496,7 +561,7 @@ const ProductCard = ({
                 className="flex items-center gap-1.5"
               >
                 <SealCheckIcon size={14} weight="fill" />
-                Added to cart!
+                Added!
               </motion.span>
             ) : (
               <motion.span
@@ -507,7 +572,12 @@ const ProductCard = ({
                 className="flex items-center gap-1.5"
               >
                 <ShoppingCartIcon size={14} />
-                {product.inStock ? "Add to Cart" : "Out of Stock"}
+
+                {quantityInCart > 0
+                  ? `${quantityInCart} in Cart`
+                  : product.inStock
+                    ? "Add to Cart"
+                    : "Out of Stock"}
               </motion.span>
             )}
           </AnimatePresence>

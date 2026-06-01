@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Providers from "@/components/providers/providers";
 import { ScrollToTopButton } from "@/components/common";
+import { Toaster } from "sonner";
 
 const lato = Lato({
   variable: "--font-heading",
@@ -124,7 +125,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster richColors />
+        </Providers>
         <ScrollToTopButton />
       </body>
     </html>

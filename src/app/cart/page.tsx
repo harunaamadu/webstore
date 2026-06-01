@@ -14,6 +14,7 @@ import {
   TruckIcon,
   SealCheckIcon,
   TagIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -24,8 +25,8 @@ import { CartItem, useCartStore } from "@/store/cart.store";
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const SHIPPING_THRESHOLD = 100;
-const SHIPPING_COST      = 9.99;
-const TAX_RATE           = 0.085;
+const SHIPPING_COST = 9.99;
+const TAX_RATE = 0.085;
 
 // ─── Cart item row ──────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
 
       {/* Details */}
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <div className="flex items-start justify-between gap-2">
+        <div className="relative flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               {product.brand}
@@ -75,7 +76,10 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
           <button
             onClick={() => removeItem(product.id, variantValue)}
             aria-label="Remove item"
-            className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
+            className={cn(
+              "flex shrink-0 text-muted-foreground transition-colors hover:text-destructive",
+              "sm:absolute sm:top-0 sm:right-0 size-9 flex items-center bg-white"
+            )}
           >
             <TrashIcon size={15} />
           </button>
@@ -97,10 +101,12 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
         )}
 
         {/* Price + Qty */}
-        <div className="mt-auto flex items-center justify-between gap-4">
+        <div className="mt-auto flex items-center justify-between gap-4 w-full">
           <div className="flex items-center border border-border">
             <button
-              onClick={() => updateQuantity(product.id, quantity - 1, variantValue)}
+              onClick={() =>
+                updateQuantity(product.id, quantity - 1, variantValue)
+              }
               className="flex size-7 items-center justify-center transition-colors hover:bg-muted disabled:opacity-40"
               disabled={quantity <= 1}
               aria-label="Decrease quantity"
@@ -111,7 +117,9 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
               {quantity}
             </span>
             <button
-              onClick={() => updateQuantity(product.id, quantity + 1, variantValue)}
+              onClick={() =>
+                updateQuantity(product.id, quantity + 1, variantValue)
+              }
               className="flex size-7 items-center justify-center transition-colors hover:bg-muted"
               aria-label="Increase quantity"
             >
@@ -119,7 +127,7 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
             </button>
           </div>
 
-          <div className="flex items-baseline gap-2 text-right">
+          <div className="flex items-baseline flex-wrap gap-1 md:gap-2 text-right">
             <span className="text-sm font-black">
               ${(product.price * quantity).toFixed(2)}
             </span>
@@ -170,11 +178,11 @@ const OrderSummary = ({
   subtotal: number;
   savings: number;
 }) => {
-  const shippingFree  = subtotal >= SHIPPING_THRESHOLD;
-  const shipping      = shippingFree ? 0 : SHIPPING_COST;
-  const tax           = subtotal * TAX_RATE;
-  const total         = subtotal + shipping + tax;
-  const toFreeShip    = SHIPPING_THRESHOLD - subtotal;
+  const shippingFree = subtotal >= SHIPPING_THRESHOLD;
+  const shipping = shippingFree ? 0 : SHIPPING_COST;
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + shipping + tax;
+  const toFreeShip = SHIPPING_THRESHOLD - subtotal;
 
   return (
     <div className="border border-border bg-muted/20 p-5">
@@ -272,12 +280,12 @@ const CartPage = () => {
     <div className="mx-auto w-full max-w-360 px-4 py-8 md:px-8">
       {/* Header */}
       <Reveal variant="slide" direction="up">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-end justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Shopping
             </p>
-            <h1 className="mt-0.5 text-2xl font-black uppercase tracking-tight md:text-3xl">
+            <h1 className="mt-0.5 text-xl font-black uppercase tracking-tight md:text-3xl">
               Your Cart
               {itemCount > 0 && (
                 <span className="ml-2 text-lg font-normal text-muted-foreground">
@@ -305,7 +313,9 @@ const CartPage = () => {
             {/* Actions bar */}
             <div className="mb-2 flex items-center justify-between border-b border-border pb-3">
               <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{itemCount}</span>{" "}
+                <span className="font-semibold text-foreground">
+                  {itemCount}
+                </span>{" "}
                 item{itemCount !== 1 ? "s" : ""} in your cart
               </p>
               <button

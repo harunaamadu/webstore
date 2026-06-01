@@ -2,15 +2,18 @@
 
 import React, { useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
 import { ArrowRightIcon } from "@phosphor-icons/react";
-import { StaggerReveal } from "../animations/reveal";
+import { cn } from "@/lib/utils";
+import { StaggerReveal } from "@/components/animations/reveal";
+
+// ─── Types ─────────────────────────────────────────────────────────────────
 
 type PersonalizedItem = {
   id: number;
@@ -21,14 +24,67 @@ type PersonalizedItem = {
   highlight?: boolean;
 };
 
+// ─── Card ───────────────────────────────────────────────────────────────────
+
+const PersonalizedCard = ({ item }: { item: PersonalizedItem }) => (
+  <motion.div
+    whileHover={{ y: -3, scale: 1.01 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+    className={cn(
+      "group relative flex h-full min-h-28 cursor-pointer items-center gap-4 overflow-hidden border bg-background/80 p-4 shadow-sm transition-colors",
+      item.highlight &&
+        "border-primary/20 bg-linear-to-br from-primary/5 via-background to-background",
+    )}
+  >
+    {/* Hover glow */}
+    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <div className="absolute inset-0 bg-linear-to-r from-primary/5 via-transparent to-primary/5" />
+    </div>
+
+    {/* Image */}
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className={cn(
+        "relative shrink-0 overflow-hidden",
+        item.highlight ? "size-16" : "size-18",
+      )}
+    >
+      <Image
+        src={item.image}
+        alt={item.title}
+        fill
+        sizes="80px"
+        className={cn("object-cover", item.highlight && "rounded-full")}
+      />
+    </motion.div>
+
+    {/* Text */}
+    <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+      <h3 className="truncate text-sm font-semibold text-foreground md:text-base">
+        {item.title}
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground md:text-sm">
+        {item.subtitle}
+      </p>
+    </div>
+
+    {/* Arrow */}
+    <motion.div
+      initial={{ opacity: 0.6 }}
+      whileHover={{ x: 4 }}
+      className="flex shrink-0 items-center justify-center border bg-background p-2"
+    >
+      <ArrowRightIcon className="size-4" />
+    </motion.div>
+  </motion.div>
+);
+
+// ─── Personalized ───────────────────────────────────────────────────────────
+
 const Personalized = () => {
-  /**
-   * Replace this with your auth/session/user fetch
-   * Example:
-   * const { data: session } = useSession()
-   */
+  // Replace with real auth/session data
   const user = {
-    name: "Guess",
+    name: "Guest",
     avatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop",
   };
@@ -76,14 +132,8 @@ const Personalized = () => {
 
   return (
     <section className="mx-auto w-full max-w-360 px-4 py-4 md:px-8">
-      <div className="overflow-hidden p-4 select-none">
-        <Carousel
-          opts={{
-            align: "center",
-            dragFree: false,
-          }}
-          className="w-full"
-        >
+      <div className="select-none overflow-hidden p-1">
+        <Carousel opts={{ align: "center", dragFree: false }} className="w-full">
           <CarouselContent className="-ml-3">
             {items.map((item, index) => (
               <CarouselItem
@@ -96,68 +146,7 @@ const Personalized = () => {
                 )}
               >
                 <StaggerReveal stagger={0.12} direction="up" variant="blur">
-                  <motion.div
-                    whileHover={{
-                      y: -3,
-                      scale: 1.01,
-                    }}
-                    transition={{
-                      duration: 0.25,
-                      ease: "easeOut",
-                    }}
-                    className={cn(
-                      "group relative flex h-full min-h-28 items-center gap-4 overflow-hidden border bg-background/80 p-4 shadow-sm transition-colors",
-                      item.highlight &&
-                        "border-primary/20 bg-linear-to-br from-primary/5 via-background to-background",
-                    )}
-                  >
-                    {/* Glow */}
-                    <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <div className="absolute inset-0 bg-linear-to-r from-primary/5 via-transparent to-primary/5" />
-                    </div>
-
-                    {/* Image */}
-                    <motion.div
-                      whileHover={{
-                        scale: 1.05,
-                      }}
-                      className={cn(
-                        "relative shrink-0 overflow-hidden",
-                        item.highlight ? "size-16" : "size-18",
-                      )}
-                    >
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        sizes="100px"
-                        className={cn(
-                          "object-cover",
-                          item.highlight && "rounded-full",
-                        )}
-                      />
-                    </motion.div>
-
-                    {/* Content */}
-                    <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-                      <h3 className="truncate text-sm md:text-base font-semibold text-foreground">
-                        {item.title}
-                      </h3>
-
-                      <p className="mt-1 text-xs text-muted-foreground md:text-sm">
-                        {item.subtitle}
-                      </p>
-                    </div>
-
-                    {/* Arrow */}
-                    <motion.div
-                      initial={{ opacity: 0.6 }}
-                      whileHover={{ x: 4 }}
-                      className="flex shrink-0 items-center justify-center border bg-background p-2"
-                    >
-                      <ArrowRightIcon className="size-4" />
-                    </motion.div>
-                  </motion.div>
+                  <PersonalizedCard item={item} />
                 </StaggerReveal>
               </CarouselItem>
             ))}

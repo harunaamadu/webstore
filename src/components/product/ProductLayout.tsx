@@ -3,101 +3,107 @@
 import React from "react";
 import { StaggerReveal } from "@/components/animations/reveal";
 import SectionTitle from "@/components/common/sectionTitle";
+import ProductCard from "@/components/product/ProductCard";
+import { ProductsSkeleton, ProductsEmpty, type EmptyStatePreset } from "./ProductStates";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { ProductCard, ProductsEmpty, ProductsSkeleton } from "@/components/product";
 import type { Product } from "@/types";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface ProductLayoutProps {
-  /** Section eyebrow label (e.g. "Top Picks") */
   eyebrow?: string;
-  /** Section heading */
   title: string;
-  /** Products to display */
   products: Product[];
-  /** Whether data is still loading */
   loading?: boolean;
-  /** Number of skeleton cards shown while loading */
   skeletonCount?: number;
-  /** Link shown beside the section title */
   link?: { href: string; label: string };
   /**
-   * Mobile breakpoint at which the carousel is used.
-   * Below this value products render as a horizontal carousel;
-   * at or above it a responsive grid is shown.
-   * Uses Tailwind responsive prefix — defaults to "sm" (≥ 640 px).
+   * Mobile breakpoint below which the carousel is used instead of the grid.
+   * Defaults to "sm" (< 640 px).
    */
   breakpoint?: "sm" | "md";
   /**
-   * Visible card width on mobile expressed as a Tailwind basis class.
-   * Defaults to "basis-[72vw]" — roughly 1.4 cards visible at once.
+   * Tailwind basis class controlling how wide each card is in the mobile carousel.
+   * Defaults to "basis-[72vw]" — roughly 1.4 cards visible.
    */
   mobileCardBasis?: string;
-  /** Icon key passed to ProductsEmpty when there are no products */
-  emptyIcon?: "history" | "bestsellers" | "default";
-  /** Empty-state headline */
+  emptyIcon?: EmptyStatePreset;
   emptyTitle?: string;
-  /** Custom Tailwind grid class for the desktop grid */
-  gridClassName?: string;
-  /** Extra class applied to the wrapping <section> */
-  className?: string;
+  emptyDescription?: string;
+  columns?: 2 | 4 | 5;
+  stagger?: number;
 }
 
-// ─── Component ──────────────────────────────────────────────────────────────
+// ─── Column class map ───────────────────────────────────────────────────────
+
+export const colClass: Record<NonNullable<ProductLayoutProps["columns"]>, string> = {
+  2: "md:grid-cols-2",
+  4: "md:grid-cols-2 lg:grid-cols-4",
+  5: "md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
+};
+
+// ─── ProductLayout ──────────────────────────────────────────────────────────
 
 const ProductLayout = ({
   eyebrow,
   title,
   products,
   loading = false,
-  skeletonCount = 8,
+  skeletonCount = 5,
   link,
   breakpoint = "sm",
   mobileCardBasis = "basis-[72vw]",
   emptyIcon = "default",
   emptyTitle = "No products found",
-  gridClassName = "grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
-  className,
+  emptyDescription = "Check back soon.",
+  columns = 5,
+  stagger = 0.08,
 }: ProductLayoutProps) => {
-  // Tailwind needs full class strings — derive the hide/show classes from
-  // the chosen breakpoint so nothing gets purged.
-  const hideBelow = breakpoint === "md" ? "md:hidden" : "sm:hidden";
-  const showAbove = breakpoint === "md" ? "hidden md:block" : "hidden sm:block";
-
   const isEmpty = !loading && products.length === 0;
 
+  // Tailwind needs full strings — derive show/hide classes from breakpoint
+  // so the purge scanner sees them as complete class names.
+  const hideOnMobile = breakpoint === "md" ? "md:hidden"     : "sm:hidden";
+  const showOnDesktop = breakpoint === "md" ? "hidden md:block" : "hidden sm:block";
+
   return (
-    <section className={`mx-auto w-full max-w-360 px-4 py-8 md:px-8 ${className ?? ""}`}>
-      {/* Title — lives outside StaggerReveal so it animates independently */}
+    <div className="mx-auto w-full max-w-360 px-4 py-8 md:px-8">
+      {/* Title — always outside StaggerReveal */}
       <SectionTitle
         eyebrow={eyebrow}
-        title={title}
+        title={`${title}${!loading && products.length > 0 ? ` (${products.length})` : ""}`}
         link={isEmpty ? undefined : link}
       />
 
-      {/* ── Loading skeleton ──────────────────────────────────────────── */}
+      {/* ── Loading ──────────────────────────────────────────────────────── */}
       {loading && (
-        <ProductsSkeleton count={skeletonCount} className={gridClassName} />
+        <ProductsSkeleton
+          count={skeletonCount}
+          className={`grid gap-4 ${colClass[columns]}`}
+        />
       )}
 
-      {/* ── Empty state ───────────────────────────────────────────────── */}
+      {/* ── Empty ────────────────────────────────────────────────────────── */}
       {isEmpty && (
-        <ProductsEmpty icon={emptyIcon} title={emptyTitle} />
+        <ProductsEmpty
+          icon={emptyIcon}
+          title={emptyTitle}
+          description={emptyDescription}
+        />
       )}
 
-      {/* ── Products ──────────────────────────────────────────────────── */}
+      {/* ── Products ─────────────────────────────────────────────────────── */}
       {!loading && products.length > 0 && (
         <>
-          {/* Mobile: horizontal drag carousel */}
-          <div className={hideBelow}>
+          {/* Mobile — horizontal drag carousel */}
+          <div className={hideOnMobile}>
             <Carousel opts={{ align: "start", dragFree: true }}>
               <CarouselContent className="-ml-3">
-                {products.map((product, i) => (
+                {products.map((product) => (
                   <CarouselItem
                     key={product.id}
                     className={`pl-3 ${mobileCardBasis}`}
@@ -109,15 +115,15 @@ const ProductLayout = ({
             </Carousel>
           </div>
 
-          {/* Desktop: staggered grid */}
-          <div className={showAbove}>
+          {/* Desktop — staggered grid */}
+          <div className={showOnDesktop}>
             <StaggerReveal
-              stagger={0.08}
+              stagger={stagger}
               variant="blur"
               direction="up"
               as="div"
               itemAs="div"
-              className={gridClassName}
+              className={`grid gap-4 ${colClass[columns]}`}
             >
               {products.map((product) => (
                 <ProductCard
@@ -130,7 +136,7 @@ const ProductLayout = ({
           </div>
         </>
       )}
-    </section>
+    </div>
   );
 };
 

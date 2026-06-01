@@ -7,7 +7,7 @@ import { mockProducts } from "@/data";
 
 const Bestsellers = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -16,7 +16,6 @@ const Bestsellers = () => {
       );
       setLoading(false);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -30,6 +29,7 @@ const Bestsellers = () => {
       link={{ href: "/shop/bestsellers", label: "View All" }}
       emptyIcon="bestsellers"
       emptyTitle="No bestsellers yet"
+      emptyDescription="Check back soon — top products will appear here."
     />
   );
 };

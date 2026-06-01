@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   SquaresFourIcon,
@@ -24,6 +24,7 @@ import type {
   ProductGridFilters,
   SortOption,
 } from "@/types";
+import BreadcrumbTitle, { Crumb } from "../common/BreadcrumbTitle";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -54,26 +55,40 @@ export const PRICE_RANGES = [
   { label: "$300+", min: 300, max: Infinity },
 ];
 
-// ─── Sort util ─────────────────────────────────────────────────────────────
+// ─── helpers ──────────────────────────────────────────────────────────────
+function sortProducts(products: Product[], sort: SortOption) {
+  const list = [...products];
 
-export function sortProducts(products: Product[], sort: SortOption): Product[] {
   switch (sort) {
     case "price-asc":
-      return [...products].sort((a, b) => a.price - b.price);
+      return list.sort((a, b) => a.price - b.price);
     case "price-desc":
-      return [...products].sort((a, b) => b.price - a.price);
+      return list.sort((a, b) => b.price - a.price);
     case "rating":
-      return [...products].sort(
+      return list.sort(
         (a, b) =>
           b.review.rating - a.review.rating ||
-          b.review.count - a.review.count
+          b.review.count - a.review.count,
       );
     case "newest":
-      return [...products].reverse();
+      return list.reverse();
     default:
-      return products;
+      return list;
   }
 }
+
+// reusable reset
+const resetFiltersState = (setters: {
+  setCategory: (v: ProductCategory | "all") => void;
+  setPriceRange: (v: any) => void;
+  setFree: (v: boolean) => void;
+  setStock: (v: boolean) => void;
+}) => {
+  setters.setCategory("all");
+  setters.setPriceRange(null);
+  setters.setFree(false);
+  setters.setStock(false);
+};
 
 // ─── ActiveFilter chip ──────────────────────────────────────────────────────
 
@@ -96,110 +111,138 @@ export const FilterChip = ({
   </motion.button>
 );
 
-// ─── ProductGrid ────────────────────────────────────────────────────────────
-
+// ─── types ────────────────────────────────────────────────────────────────
 export interface ProductGridProps {
+  titleType?: "default" | "breadcrumb";
   title?: string;
   eyebrow?: string;
   products?: Product[];
+  link?: { href: string; label: string };
   defaultCategory?: ProductCategory | "all";
   showFilters?: boolean;
   showLayoutToggle?: boolean;
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 4 | 5;
   className?: string;
+  loading?: boolean;
+  crumbs?: Crumb[];
 }
 
 const ProductGrid = ({
+  titleType = "default",
   title = "Products",
   eyebrow = "Shop",
   products = mockProducts,
+  crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Shop" },
+  ],
   defaultCategory = "all",
   showFilters = true,
   showLayoutToggle = true,
-  columns = 4,
+  columns = 5,
   className,
 }: ProductGridProps) => {
   const [category, setCategory] = useState<ProductCategory | "all">(
-    defaultCategory
+    defaultCategory,
   );
   const [sort, setSort] = useState<SortOption>("featured");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
-  const [priceRange, setPriceRange] = useState<{
-    min: number;
-    max: number;
-  } | null>(null);
+  const [priceRange, setPriceRange] = useState<any>(null);
   const [onlyFreeShipping, setOnlyFreeShipping] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // Apply filters + sort
+  // ─── filtered products (optimized memo) ────────────────────────────────
   const filtered = useMemo(() => {
     let result = products;
 
     if (category !== "all") {
       result = result.filter((p) => p.category === category);
     }
+
     if (priceRange) {
       result = result.filter(
         (p) =>
           p.price >= priceRange.min &&
-          (priceRange.max === Infinity || p.price <= priceRange.max)
+          (priceRange.max === Infinity || p.price <= priceRange.max),
       );
     }
-    if (onlyFreeShipping) {
-      result = result.filter((p) => p.freeShipping);
-    }
-    if (onlyInStock) {
-      result = result.filter((p) => p.inStock);
-    }
+
+    if (onlyFreeShipping) result = result.filter((p) => p.freeShipping);
+    if (onlyInStock) result = result.filter((p) => p.inStock);
 
     return sortProducts(result, sort);
   }, [products, category, sort, priceRange, onlyFreeShipping, onlyInStock]);
 
-  // Active filter chips
-  const activeFilters: { label: string; clear: () => void }[] = [];
-  if (category !== "all") {
-    activeFilters.push({
-      label: CATEGORIES.find((c) => c.value === category)?.label ?? category,
-      clear: () => setCategory("all"),
-    });
-  }
-  if (priceRange) {
-    activeFilters.push({
-      label:
-        PRICE_RANGES.find(
-          (r) => r.min === priceRange.min && r.max === priceRange.max
-        )?.label ?? "Price filter",
-      clear: () => setPriceRange(null),
-    });
-  }
-  if (onlyFreeShipping) {
-    activeFilters.push({
-      label: "Free Shipping",
-      clear: () => setOnlyFreeShipping(false),
-    });
-  }
-  if (onlyInStock) {
-    activeFilters.push({
-      label: "In Stock",
-      clear: () => setOnlyInStock(false),
-    });
-  }
+// ─── active filters (memoized) ─────────────────────────────────────────
+  const activeFilters = useMemo(() => {
+    const filters: { label: string; clear: () => void }[] = [];
+
+    if (category !== "all") {
+      filters.push({
+        label:
+          CATEGORIES.find((c) => c.value === category)?.label ?? category,
+        clear: () => setCategory("all"),
+      });
+    }
+
+    if (priceRange) {
+      filters.push({
+        label:
+          PRICE_RANGES.find(
+            (r) => r.min === priceRange.min && r.max === priceRange.max,
+          )?.label ?? "Price filter",
+        clear: () => setPriceRange(null),
+      });
+    }
+
+    if (onlyFreeShipping) {
+      filters.push({
+        label: "Free Shipping",
+        clear: () => setOnlyFreeShipping(false),
+      });
+    }
+
+    if (onlyInStock) {
+      filters.push({
+        label: "In Stock",
+        clear: () => setOnlyInStock(false),
+      });
+    }
+
+    return filters;
+  }, [category, priceRange, onlyFreeShipping, onlyInStock]);
 
   const colClass = {
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+    2: "md:grid-cols-2",
+    4: "md:grid-cols-2 lg:grid-cols-4",
+    5: "md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
   }[columns];
 
+  const clearAll = useCallback(() => {
+    setCategory("all");
+    setPriceRange(null);
+    setOnlyFreeShipping(false);
+    setOnlyInStock(false);
+  }, []);
+
   return (
-    <section className={cn("mx-auto w-full max-w-360 px-4 py-8 md:px-8", className)}>
-      {/* Header */}
-      <SectionTitle
-        eyebrow={eyebrow}
-        title={title}
-        link={{ href: "/shop", label: "View all" }}
-      />
+    <section
+      className={cn("mx-auto w-full max-w-360 px-4 py-8 md:px-8", className)}
+    >
+      {/* Title */}
+      {titleType === "default" ? (
+        <div className="text-center">
+          <h2 className="text-3xl font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{eyebrow}</p>
+        </div>
+      ) : (
+        <BreadcrumbTitle
+          eyebrow={eyebrow}
+          title={title}
+          crumbs={crumbs}
+        />
+      )}
 
       {/* Category tabs */}
       <div className="mb-4 flex flex-wrap gap-1.5 overflow-x-auto pb-1">
@@ -211,7 +254,7 @@ const ProductGrid = ({
               "shrink-0 border px-3 py-1.5 text-xs font-medium transition-all",
               category === cat.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-foreground hover:border-primary/50 hover:bg-muted"
+                : "border-border bg-background text-foreground hover:border-primary/50 hover:bg-muted",
             )}
           >
             {cat.label}
@@ -241,7 +284,9 @@ const ProductGrid = ({
           )}
 
           <p className="text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
+            <span className="font-semibold text-foreground">
+              {filtered.length}
+            </span>{" "}
             results
           </p>
         </div>
@@ -269,7 +314,7 @@ const ProductGrid = ({
                   "flex size-7 items-center justify-center transition-colors",
                   layout === "grid"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:bg-muted"
+                    : "bg-background text-muted-foreground hover:bg-muted",
                 )}
               >
                 <SquaresFourIcon size={14} />
@@ -280,7 +325,7 @@ const ProductGrid = ({
                   "flex size-7 items-center justify-center transition-colors",
                   layout === "list"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:bg-muted"
+                    : "bg-background text-muted-foreground hover:bg-muted",
                 )}
               >
                 <ListIcon size={14} />
@@ -300,7 +345,7 @@ const ProductGrid = ({
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <div className="mb-4 grid grid-cols-2 gap-6 border border-border bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mb-4 grid grid-cols-2 gap-6 border border-border bg-muted/30 p-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
               {/* Price range */}
               <div>
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -314,14 +359,14 @@ const ProductGrid = ({
                         setPriceRange(
                           priceRange?.min === r.min && priceRange?.max === r.max
                             ? null
-                            : { min: r.min, max: r.max }
+                            : { min: r.min, max: r.max },
                         )
                       }
                       className={cn(
                         "text-left text-xs transition-colors",
                         priceRange?.min === r.min && priceRange?.max === r.max
                           ? "font-semibold text-primary"
-                          : "text-foreground hover:text-primary"
+                          : "text-foreground hover:text-primary",
                       )}
                     >
                       {r.label}
@@ -438,7 +483,15 @@ const ProductGrid = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.4) }}
               >
-                <ProductCard product={product} variant="default" />
+                <StaggerReveal
+                  stagger={0.08}
+                  variant="blur"
+                  direction="up"
+                  as="div"
+                  itemAs="div"
+                >
+                  <ProductCard product={product} variant="default" />
+                </StaggerReveal>
               </motion.div>
             ))}
           </motion.div>
@@ -456,9 +509,20 @@ const ProductGrid = ({
                 key={product.id}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(i * 0.03, 0.3) }}
+                transition={{
+                  duration: 0.25,
+                  delay: Math.min(i * 0.03, 0.3),
+                }}
               >
-                <ProductCard product={product} variant="horizontal" />
+                <StaggerReveal
+                  stagger={0.08}
+                  variant="blur"
+                  direction="up"
+                  as="div"
+                  itemAs="div"
+                >
+                  <ProductCard product={product} variant="horizontal" />
+                </StaggerReveal>
               </motion.div>
             ))}
           </motion.div>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Product, ProductVariant } from "@/types";
+import { appToast } from "@/hooks/useToast";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -14,15 +15,19 @@ interface CartState {
   items: CartItem[];
 
   // Derived
-  itemCount:  number;
-  subtotal:   number;
-  savings:    number;
+  itemCount: number;
+  subtotal: number;
+  savings: number;
 
   // Actions
-  addItem:        (product: Product, variant?: ProductVariant) => void;
-  removeItem:     (productId: string, variantValue?: string) => void;
-  updateQuantity: (productId: string, quantity: number, variantValue?: string) => void;
-  clearCart:      () => void;
+  addItem: (product: Product, variant?: ProductVariant) => void;
+  removeItem: (productId: string, variantValue?: string) => void;
+  updateQuantity: (
+    productId: string,
+    quantity: number,
+    variantValue?: string,
+  ) => void;
+  clearCart: () => void;
 }
 
 // ─── Key helper ────────────────────────────────────────────────────────────
@@ -62,10 +67,10 @@ function derive(items: CartItem[]) {
 export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
-      items:     [],
+      items: [],
       itemCount: 0,
-      subtotal:  0,
-      savings:   0,
+      subtotal: 0,
+      savings: 0,
 
       addItem: (product, variant) =>
         set((state) => {
@@ -79,16 +84,42 @@ export const useCartStore = create<CartState>()(
                   ? { ...i, quantity: i.quantity + 1 }
                   : i,
               )
-            : [...state.items, { product, quantity: 1, selectedVariant: variant }];
+            : [
+                ...state.items,
+                {
+                  product,
+                  quantity: 1,
+                  selectedVariant: variant,
+                },
+              ];
+
+          appToast.success(
+            exists
+              ? `Updated ${product.name}`
+              : `${product.name} added to cart`,
+            exists ? `Quantity increased to ${exists.quantity + 1}` : undefined,
+          );
 
           return { items, ...derive(items) };
         }),
 
       removeItem: (productId, variantValue) =>
         set((state) => {
+          const item = state.items.find((i) =>
+            matchesKey(i, productId, variantValue),
+          );
+
           const items = state.items.filter(
             (i) => !matchesKey(i, productId, variantValue),
           );
+
+          if (item) {
+            appToast.info(
+              `${item.product.name} removed`,
+              "Item removed from cart",
+            );
+          }
+
           return { items, ...derive(items) };
         }),
 
@@ -96,7 +127,9 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const items =
             quantity <= 0
-              ? state.items.filter((i) => !matchesKey(i, productId, variantValue))
+              ? state.items.filter(
+                  (i) => !matchesKey(i, productId, variantValue),
+                )
               : state.items.map((i) =>
                   matchesKey(i, productId, variantValue)
                     ? { ...i, quantity }
@@ -105,8 +138,16 @@ export const useCartStore = create<CartState>()(
           return { items, ...derive(items) };
         }),
 
-      clearCart: () =>
-        set({ items: [], itemCount: 0, subtotal: 0, savings: 0 }),
+      clearCart: () => {
+        appToast.info("Cart cleared", "All items have been removed");
+
+        set({
+          items: [],
+          itemCount: 0,
+          subtotal: 0,
+          savings: 0,
+        });
+      },
     }),
     {
       name: "ws_cart",
@@ -117,8 +158,8 @@ export const useCartStore = create<CartState>()(
         if (state) {
           const { itemCount, subtotal, savings } = derive(state.items);
           state.itemCount = itemCount;
-          state.subtotal  = subtotal;
-          state.savings   = savings;
+          state.subtotal = subtotal;
+          state.savings = savings;
         }
       },
     },
